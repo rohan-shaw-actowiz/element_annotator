@@ -24,6 +24,34 @@ function getUniqueSelector(el) {
   return el.tagName.toLowerCase();
 }
 
+function getElementXPath(element) {
+  if (element.id !== '') {
+    return `//*[@id="${element.id}"]`;
+  }
+
+  const parts = [];
+
+  while (element && element.nodeType === Node.ELEMENT_NODE) {
+    let index = 1;
+    let sibling = element.previousSibling;
+
+    while (sibling) {
+      if (sibling.nodeType === Node.ELEMENT_NODE && sibling.nodeName === element.nodeName) {
+        index++;
+      }
+      sibling = sibling.previousSibling;
+    }
+
+    const tagName = element.nodeName.toLowerCase();
+    const part = `${tagName}[${index}]`;
+    parts.unshift(part);
+
+    element = element.parentNode;
+  }
+
+  return '/' + parts.join('/');
+}
+
 // Create transparent overlay to show selection mode
 function createOverlay() {
   overlay = document.createElement("div");
@@ -201,7 +229,7 @@ function onClick(e) {
     annotations.push({
       element: elem,
       inputEl: input,
-      selector: getUniqueSelector(elem)
+      selector: getElementXPath(elem)
     });
   }
 }
