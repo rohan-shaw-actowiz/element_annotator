@@ -138,11 +138,15 @@ function onClick(e) {
   if (index !== -1) {
     // Unselect
     const { element, inputEl } = annotations[index];
-    element.style.backgroundColor = "";
+    // element.style.backgroundColor = "";
     element.style.outline = "";
     element.style.position = "";
     element.style.border = "";
     element.style.boxSizing = "";
+
+    if (element.getAttribute("data-label-act")) {
+      element.removeAttribute("data-label-act");
+    }
     
     if (inputEl && inputEl.parentNode === element) {
       element.removeChild(inputEl);
@@ -153,8 +157,8 @@ function onClick(e) {
     // Select new element
     elem.style.outline = "none";
     elem.style.position = "relative";
-    elem.style.backgroundColor = "rgba(255, 60, 0, 0.81)";
-    elem.style.border = "4px solid rgba(255, 60, 0, 0.81)"; 
+    // elem.style.backgroundColor = "rgba(255, 60, 0, 0.81)";
+    elem.style.border = "4px dashed rgba(255, 60, 0, 0.81)"; 
     elem.style.boxSizing = "border-box"; // Ensures border doesn't push the element, but is part of its size
 
     const input = document.createElement("input");
@@ -183,6 +187,16 @@ function onClick(e) {
     }
 
     input.focus();
+
+      // Auto-apply data-label as the user types
+    input.addEventListener("input", () => {
+      const label = input.value.trim();
+      if (label) {
+        elem.setAttribute("data-label-act", label);
+      } else {
+        elem.removeAttribute("data-label-act");
+      }
+    });
 
     annotations.push({
       element: elem,
