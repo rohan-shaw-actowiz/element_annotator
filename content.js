@@ -93,6 +93,29 @@ function createDoneButton() {
   document.body.appendChild(doneBtn);
 }
 
+function createClearAllButton() {
+  if (document.getElementById('annotation-clear-all-btn')) return;
+  const clearAllBtn = document.createElement("button");
+  clearAllBtn.id = "annotation-clear-all-btn";
+  clearAllBtn.innerText = "🗑️";
+  clearAllBtn.style.position = "fixed";
+  clearAllBtn.style.top = "10px";
+  clearAllBtn.style.right = "215px";
+  clearAllBtn.style.zIndex = "100000";
+  clearAllBtn.style.padding = "10px 15px";
+  clearAllBtn.style.background = "#111111";
+  clearAllBtn.style.color = "#fff";
+  clearAllBtn.style.border = "none";
+  clearAllBtn.style.borderRadius = "5px";
+  clearAllBtn.style.cursor = "pointer";
+  clearAllBtn.style.pointerEvents = "all";
+  clearAllBtn.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+  clearAllBtn.onclick = () => {
+    clearAllElements();
+  };
+  document.body.appendChild(clearAllBtn);
+}
+
 // --- ANNOTATION MODE LOGIC ---
 
 function startAnnotationMode() {
@@ -103,6 +126,7 @@ function startAnnotationMode() {
   createSelectionOverlay();
   createSvgLineOverlay();
   createDoneButton();
+  createClearAllButton();
   document.addEventListener("mouseover", onMouseOver);
   document.addEventListener("mouseout", onMouseOut);
   document.addEventListener("click", onClick, true);
@@ -143,6 +167,9 @@ function stopAnnotationMode() {
   const doneBtn = document.getElementById("annotation-done-btn");
   if (doneBtn) doneBtn.remove();
 
+  const clearAllBtn = document.getElementById("annotation-clear-all-btn");
+  if (clearAllBtn) clearAllBtn.remove();
+
   document.removeEventListener("mouseover", onMouseOver);
   document.removeEventListener("mouseout", onMouseOut);
   document.removeEventListener("click", onClick, true);
@@ -155,19 +182,7 @@ function stopAnnotationMode() {
   }
 
   const activeAnnotationsForExport = Array.from(document.querySelectorAll('.annotation-label-input')).map(inputEl => {
-      const ann = annotations.find(a => a.inputEl === inputEl); // This won't work as annotations is cleared.
-                                                                // We need to grab data before clearing.
-                                                                // This part is tricky if stopAnnotationMode clears UI first.
-                                                                // The original logic of mapping `annotations` before clearing was better.
-                                                                // Let's revert to that.
-      // The `annotations` array will be used for export as it was before this function's UI clearing.
-      // The `console.log` at the start of this function shows what would be saved.
-      // For actual saving, the mapping should happen on the `annotations` array *before* it's cleared
-      // or before its elements are removed.
-      // To fix this properly, we'd need to collect data for export *before* removing elements.
-      // The current `exportAnnotations` is done on the `annotations` array *before* it's modified by this function's cleanup.
-      // This is implicitly handled by the `annotations.map` call being before `annotations = []` or element removal.
-      // Let's make this explicit for clarity:
+      const ann = annotations.find(a => a.inputEl === inputEl); 
       const annotationsToExport = annotations.map(({ selector, inputEl }) => ({
         selector,
         label: inputEl.value.trim()
@@ -209,9 +224,6 @@ function stopAnnotationMode() {
     })
     .catch(err => {
       console.error("Screenshot capture failed:", err);
-      // Avoid using alert if possible, use a custom modal or notification
-      // For now, keeping it simple:
-      // alert("Screenshot couldn't be captured. This might be due to website content restrictions (e.g., iframes or CORS issues with assets).");
       console.warn("Screenshot couldn't be captured. This might be due to website content restrictions (e.g., iframes or CORS issues with assets).");
     });
   } else {
@@ -232,7 +244,7 @@ function onMouseOver(e) {
     }
   }
   const el = e.target;
-  if (el && el.id !== 'annotation-done-btn' && el !== overlay && el !== lineSvg && !el.closest('#annotation-done-btn') && !el.classList.contains('annotation-label-input') && !el.classList.contains('annotation-resize-handle')) {
+  if (el && el.id !== 'annotation-done-btn' && el.id !=='annotation-clear-all-btn' && el !== overlay && el !== lineSvg && !el.closest('#annotation-done-btn') && !el.closest('#annotation-clear-all-btn') && !el.classList.contains('annotation-label-input') && !el.classList.contains('annotation-resize-handle')) {
     const isAnnotated = annotations.some(a => a.element === el);
     if (!isAnnotated) {
         el.style.outline = "2px dashed red";
@@ -254,8 +266,8 @@ function onMouseOut(e) {
 
 function isValidElement(el) {
   if (!el || typeof el.tagName !== 'string') return false;
-  if (el.id === 'annotation-done-btn' || el.id === 'selection-dim-overlay' || el.id === 'annotation-lines-svg') return false;
-  if (el.closest && (el.closest('#annotation-done-btn') || el.classList.contains('annotation-label-input') || el.classList.contains('annotation-resize-handle'))) return false;
+  if (el.id === 'annotation-done-btn' || el.id === 'annotation-clear-all-btn' || el.id === 'selection-dim-overlay' || el.id === 'annotation-lines-svg') return false;
+  if (el.closest && (el.closest('#annotation-done-btn')|| el.closest('#annotation-clear-all-btn') || el.classList.contains('annotation-label-input') || el.classList.contains('annotation-resize-handle'))) return false;
   if (el === overlay || el === lineSvg) return false;
   if (["BODY", "HTML", "SCRIPT", "STYLE"].includes(el.tagName)) return false;
   return true;
@@ -541,34 +553,12 @@ window.addEventListener("capture-screenshot", () => {
 
 // Renamed stopAnnotationMode to performStopAnnotationActions to reflect its role after data gathering
 function performStopAnnotationActions(annotationsToExport) {
-  // selectionActive = false; // This should be set at the beginning of the stop sequence
-  // document.body.style.cursor = "default"; // Also at the beginning
 
-  // Clear UI elements related to annotations
-  // annotations.forEach(annotation => {
-  //   if (annotation.inputEl && annotation.inputEl.parentNode) {
-  //     annotation.inputEl.remove();
-  //   }
-  //   if (annotation.lineEl && annotation.lineEl.parentNode) {
-  //     annotation.lineEl.remove();
-  //   }
-  //   if (annotation.resizeHandle && annotation.resizeHandle.parentNode) {
-  //       annotation.resizeHandle.remove();
-  //   }
-  // });
-  // annotations = []; // Clear the main array *after* export data is secured
-
-  // The rest of the cleanup from the original stopAnnotationMode
-  // if (overlay) {
-  //   overlay.remove();
-  //   overlay = null;
-  // }
-  // if (lineSvg) {
-  //   lineSvg.remove();
-  //   lineSvg = null;
-  // }
   const doneBtn = document.getElementById("annotation-done-btn");
   if (doneBtn) doneBtn.remove();
+
+  const clearAllBtn = document.getElementById("annotation-clear-all-btn");
+  if (clearAllBtn) clearAllBtn.remove();
 
   document.removeEventListener("mouseover", onMouseOver);
   document.removeEventListener("mouseout", onMouseOut);
@@ -581,15 +571,8 @@ function performStopAnnotationActions(annotationsToExport) {
     lastHoveredElement = null;
   }
   
-  // selectionActive and cursor should be reset at the very start of the stopping process.
-  // This is already handled by the `capture-screenshot` event calling `stopAnnotationMode` (now `performStopAnnotationActions`)
-  // and `stopAnnotationMode` (original) setting these.
-  // The global `selectionActive` should be set to false when `stopAnnotationMode` (or its equivalent) is called.
-  // Let's ensure `selectionActive` is false here.
   selectionActive = false; // Ensure it's set here.
   document.body.style.cursor = "default";
-  // annotations = []; // Finally, clear the live annotations array.
-
 
   // Download JSON
   const json = JSON.stringify(annotationsToExport, null, 2);
@@ -612,25 +595,6 @@ function performStopAnnotationActions(annotationsToExport) {
       logging: false,
       scale: window.devicePixelRatio || 1,
       onclone: (clonedDoc) => {
-        // Ensure annotation elements that were part of the live DOM (and thus potentially removed by now)
-        // are "re-added" or their visual state is preserved in the clone if necessary.
-        // However, html2canvas clones the *current* state. If labels/lines are removed *before*
-        // html2canvas runs, they won't be in the screenshot.
-        // The screenshot should ideally be taken *before* removing annotation UI elements.
-        // This implies a restructuring of when `performStopAnnotationActions` is called relative to screenshotting.
-
-        // For simplicity with the current flow: the screenshot will capture what's visible
-        // *after* the "Save" button is clicked but *before* UI elements are programmatically removed.
-        // The current structure of `capture-screenshot` event calling `performStopAnnotationActions`
-        // means UI is cleaned up THEN screenshot is attempted on the cleaned DOM. This is incorrect.
-
-        // Corrected flow idea:
-        // 1. `capture-screenshot` event is triggered.
-        // 2. Gather data for export.
-        // 3. Take screenshot (while UI elements are still visible).
-        // 4. THEN, clean up UI elements and download files.
-
-        // Let's adjust the `capture-screenshot` event listener.
       }
     }).then(canvas => {
       const image = canvas.toDataURL("image/png");
@@ -662,10 +626,16 @@ const globalCaptureScreenshotListener = () => {
 
     // Temporarily set cursor to default for screenshot, hide "Done" button
     const doneBtn = document.getElementById("annotation-done-btn");
+    const clearAllBtn = document.getElementById("annotation-clear-all-btn");
     let originalDoneBtnDisplay = '';
     if (doneBtn) {
         originalDoneBtnDisplay = doneBtn.style.display;
         doneBtn.style.display = 'none'; // Hide button for screenshot
+    }
+    let originalClearAllBtnDisplay = '';
+    if (clearAllBtn) {
+        originalClearAllBtnDisplay = clearAllBtn.style.display;
+        clearAllBtn.style.display = 'none'; // Hide button for screenshot
     }
     const originalBodyCursor = document.body.style.cursor;
     document.body.style.cursor = 'default';
@@ -678,7 +648,7 @@ const globalCaptureScreenshotListener = () => {
             allowTaint: false,
             logging: false,
             scale: window.devicePixelRatio || 1,
-            ignoreElements: (element) => element.id === 'annotation-done-btn' // Alternative way to hide
+            ignoreElements: (element) => element.id === 'annotation-done-btn' || element.id === 'annotation-clear-all-btn', // Alternative way to hide
         }).then(canvas => {
             const image = canvas.toDataURL("image/png");
             const screenshotLink = document.createElement("a");
@@ -712,24 +682,15 @@ window.addEventListener("capture-screenshot", globalCaptureScreenshotListener);
 function finalizeAnnotationStop(annotationsToExport) {
     // Restore "Done" button if it was hidden, and cursor
     const doneBtn = document.getElementById("annotation-done-btn");
+    const clearAllBtn = document.getElementById("annotation-clear-all-btn");
     if (doneBtn && typeof originalDoneBtnDisplay !== 'undefined') { // originalDoneBtnDisplay might not be set if button never existed
        // doneBtn.style.display = originalDoneBtnDisplay; // Not needed as it will be removed
     }
-    // if (typeof originalBodyCursor !== 'undefined') document.body.style.cursor = originalBodyCursor; // Will be set to default anyway
-
-    // Actual cleanup and JSON download (adapted from performStopAnnotationActions)
     selectionActive = false;
     document.body.style.cursor = "default";
 
-    // annotations.forEach(annotation => {
-    //     if (annotation.inputEl && annotation.inputEl.parentNode) annotation.inputEl.remove();
-    //     if (annotation.lineEl && annotation.lineEl.parentNode) annotation.lineEl.remove();
-    //     // resizeHandle is child of inputEl, so removed with it.
-    // });
-    
-    // if (overlay) { overlay.remove(); overlay = null; }
-    // if (lineSvg) { lineSvg.remove(); lineSvg = null; }
     if (doneBtn) doneBtn.remove(); // Now remove it
+    if (clearAllBtn) clearAllBtn.remove(); // Now remove it
 
     document.removeEventListener("mouseover", onMouseOver);
     document.removeEventListener("mouseout", onMouseOut);
@@ -739,8 +700,6 @@ function finalizeAnnotationStop(annotationsToExport) {
 
     if (lastHoveredElement) { lastHoveredElement.style.outline = ""; lastHoveredElement = null; }
     
-    // annotations = []; // Clear the live annotations array
-
     // Download JSON
     const json = JSON.stringify(annotationsToExport, null, 2);
     const dataUrl = "data:application/json;charset=utf-8," + encodeURIComponent(json);
@@ -751,4 +710,38 @@ function finalizeAnnotationStop(annotationsToExport) {
     document.body.appendChild(aJson);
     aJson.click();
     document.body.removeChild(aJson);
+}
+
+function clearAllElements() {
+  // Remove all annotation elements (inputs, lines, resize handles)
+  annotations.forEach(annotation => {
+    if (annotation.inputEl && annotation.inputEl.parentNode) {
+      annotation.inputEl.remove();
+    }
+    if (annotation.lineEl && annotation.lineEl.parentNode) {
+      annotation.lineEl.remove();
+    }
+    if (annotation.resizeHandle && annotation.resizeHandle.parentNode) {
+        annotation.resizeHandle.remove();
+    }
+
+    annotation.element.style.outline = "";
+    annotation.element.style.position = "";
+    annotation.element.style.border = "";
+    annotation.element.style.boxSizing = "";
+
+    if (annotation.element.getAttribute("data-label-act")) annotation.element.removeAttribute("data-label-act");    
+    // Reset style on the annotated element itself if needed, though current border is for screenshot
+    // annotation.element.style.border = ""; // Example if you wanted to clear it
+  });
+  annotations = []; // Clear the array
+
+  if (overlay) {
+    overlay.remove();
+    overlay = null;
+  }
+  if (lineSvg) {
+    lineSvg.remove();
+    lineSvg = null;
+  }
 }
