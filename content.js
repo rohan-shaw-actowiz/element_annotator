@@ -117,29 +117,29 @@ function stopAnnotationMode() {
   document.body.style.cursor = "default";
 
   // Remove all annotation elements (inputs, lines, resize handles)
-  annotations.forEach(annotation => {
-    if (annotation.inputEl && annotation.inputEl.parentNode) {
-      annotation.inputEl.remove();
-    }
-    if (annotation.lineEl && annotation.lineEl.parentNode) {
-      annotation.lineEl.remove();
-    }
-    if (annotation.resizeHandle && annotation.resizeHandle.parentNode) {
-        annotation.resizeHandle.remove();
-    }
-    // Reset style on the annotated element itself if needed, though current border is for screenshot
-    // annotation.element.style.border = ""; // Example if you wanted to clear it
-  });
-  annotations = []; // Clear the array
+  // annotations.forEach(annotation => {
+  //   if (annotation.inputEl && annotation.inputEl.parentNode) {
+  //     annotation.inputEl.remove();
+  //   }
+  //   if (annotation.lineEl && annotation.lineEl.parentNode) {
+  //     annotation.lineEl.remove();
+  //   }
+  //   if (annotation.resizeHandle && annotation.resizeHandle.parentNode) {
+  //       annotation.resizeHandle.remove();
+  //   }
+  //   // Reset style on the annotated element itself if needed, though current border is for screenshot
+  //   // annotation.element.style.border = ""; // Example if you wanted to clear it
+  // });
+  // annotations = []; // Clear the array
 
-  if (overlay) {
-    overlay.remove();
-    overlay = null;
-  }
-  if (lineSvg) {
-    lineSvg.remove();
-    lineSvg = null;
-  }
+  // if (overlay) {
+  //   overlay.remove();
+  //   overlay = null;
+  // }
+  // if (lineSvg) {
+  //   lineSvg.remove();
+  //   lineSvg = null;
+  // }
   const doneBtn = document.getElementById("annotation-done-btn");
   if (doneBtn) doneBtn.remove();
 
@@ -154,10 +154,6 @@ function stopAnnotationMode() {
     lastHoveredElement = null;
   }
 
-  // Prepare and download annotations JSON
-  // Note: annotations array is now empty, so this needs to be done BEFORE clearing it if we want to save.
-  // For this version, we assume saving happens based on the state *before* clearing.
-  // Let's move the exportAnnotations logic before clearing the UI elements related to annotations.
   const activeAnnotationsForExport = Array.from(document.querySelectorAll('.annotation-label-input')).map(inputEl => {
       const ann = annotations.find(a => a.inputEl === inputEl); // This won't work as annotations is cleared.
                                                                 // We need to grab data before clearing.
@@ -549,28 +545,28 @@ function performStopAnnotationActions(annotationsToExport) {
   // document.body.style.cursor = "default"; // Also at the beginning
 
   // Clear UI elements related to annotations
-  annotations.forEach(annotation => {
-    if (annotation.inputEl && annotation.inputEl.parentNode) {
-      annotation.inputEl.remove();
-    }
-    if (annotation.lineEl && annotation.lineEl.parentNode) {
-      annotation.lineEl.remove();
-    }
-    if (annotation.resizeHandle && annotation.resizeHandle.parentNode) {
-        annotation.resizeHandle.remove();
-    }
-  });
+  // annotations.forEach(annotation => {
+  //   if (annotation.inputEl && annotation.inputEl.parentNode) {
+  //     annotation.inputEl.remove();
+  //   }
+  //   if (annotation.lineEl && annotation.lineEl.parentNode) {
+  //     annotation.lineEl.remove();
+  //   }
+  //   if (annotation.resizeHandle && annotation.resizeHandle.parentNode) {
+  //       annotation.resizeHandle.remove();
+  //   }
+  // });
   // annotations = []; // Clear the main array *after* export data is secured
 
   // The rest of the cleanup from the original stopAnnotationMode
-  if (overlay) {
-    overlay.remove();
-    overlay = null;
-  }
-  if (lineSvg) {
-    lineSvg.remove();
-    lineSvg = null;
-  }
+  // if (overlay) {
+  //   overlay.remove();
+  //   overlay = null;
+  // }
+  // if (lineSvg) {
+  //   lineSvg.remove();
+  //   lineSvg = null;
+  // }
   const doneBtn = document.getElementById("annotation-done-btn");
   if (doneBtn) doneBtn.remove();
 
@@ -592,7 +588,7 @@ function performStopAnnotationActions(annotationsToExport) {
   // Let's ensure `selectionActive` is false here.
   selectionActive = false; // Ensure it's set here.
   document.body.style.cursor = "default";
-  annotations = []; // Finally, clear the live annotations array.
+  // annotations = []; // Finally, clear the live annotations array.
 
 
   // Download JSON
@@ -654,9 +650,6 @@ function performStopAnnotationActions(annotationsToExport) {
   }
 }
 
-
-// Revised capture-screenshot listener for correct order of operations
-window.removeEventListener("capture-screenshot", globalCaptureScreenshotListener); // Remove previous if any
 const globalCaptureScreenshotListener = () => {
     if (!selectionActive) return;
     console.log("Event 'capture-screenshot' received (revised flow).");
@@ -709,6 +702,10 @@ const globalCaptureScreenshotListener = () => {
         finalizeAnnotationStop(annotationsToExport);
     }
 };
+
+// Revised capture-screenshot listener for correct order of operations
+window.removeEventListener("capture-screenshot", globalCaptureScreenshotListener); // Remove previous if any
+
 window.addEventListener("capture-screenshot", globalCaptureScreenshotListener);
 
 
@@ -724,14 +721,14 @@ function finalizeAnnotationStop(annotationsToExport) {
     selectionActive = false;
     document.body.style.cursor = "default";
 
-    annotations.forEach(annotation => {
-        if (annotation.inputEl && annotation.inputEl.parentNode) annotation.inputEl.remove();
-        if (annotation.lineEl && annotation.lineEl.parentNode) annotation.lineEl.remove();
-        // resizeHandle is child of inputEl, so removed with it.
-    });
+    // annotations.forEach(annotation => {
+    //     if (annotation.inputEl && annotation.inputEl.parentNode) annotation.inputEl.remove();
+    //     if (annotation.lineEl && annotation.lineEl.parentNode) annotation.lineEl.remove();
+    //     // resizeHandle is child of inputEl, so removed with it.
+    // });
     
-    if (overlay) { overlay.remove(); overlay = null; }
-    if (lineSvg) { lineSvg.remove(); lineSvg = null; }
+    // if (overlay) { overlay.remove(); overlay = null; }
+    // if (lineSvg) { lineSvg.remove(); lineSvg = null; }
     if (doneBtn) doneBtn.remove(); // Now remove it
 
     document.removeEventListener("mouseover", onMouseOver);
