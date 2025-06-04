@@ -17,6 +17,6 @@ document.getElementById("start-annotation").addEventListener("click", () => {
   sendEventToActiveTab("start-annotator");
 });
 
-document.getElementById("capture").addEventListener("click", () => {
-  sendEventToActiveTab("capture-screenshot");
-});
+// document.getElementById("capture").addEventListener("click", () => {
+//   sendEventToActiveTab("capture-screenshot");
+// });
